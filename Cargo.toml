@@ -1,0 +1,17 @@
+[package]
+name = "fsds-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# MessagePack encoder/decoder
+rmp = "0.8.14"
+msgpack-rpc = "0.4.2"
+
+# Async runtime
+tokio = { version = "1.39.3", features = ["net", "macros"] }
+tokio-util = "0.7.11"
+
+# Utils
+anyhow = "=1.0.86"
+struct_iterable = "0.1.1"
