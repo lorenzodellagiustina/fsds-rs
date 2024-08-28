@@ -1,5 +1,5 @@
-use std::{thread::sleep, time::Duration};
 use fsds_rs::{client, types::CarControls};
+use std::{thread::sleep, time::Duration};
 
 /// The name of the vehicle to control.
 const VEHICLE_NAME: &str = "FSCar";
@@ -16,7 +16,7 @@ async fn main() {
     client.enable_api_control(true, VEHICLE_NAME).await;
 
     let mut controls = CarControls::default();
-    
+
     controls.throttle = 1.0;
     let value = client.set_car_controls(controls, VEHICLE_NAME).await;
     println!("{:?}", value);

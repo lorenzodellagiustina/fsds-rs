@@ -7,10 +7,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn client() {
-    }
+    fn client() {}
 
-    fn types() {
-
-    }
+    fn types() {}
 }
