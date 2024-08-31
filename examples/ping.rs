@@ -13,7 +13,7 @@ async fn main() {
     // Trying connection.
     client.ping().await;
 
-    client.enable_api_control(true, VEHICLE_NAME).await;
+    client.enable_api_control(VEHICLE_NAME).await;
 
     let mut controls = CarControls::default();
 

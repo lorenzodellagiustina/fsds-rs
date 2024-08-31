@@ -85,11 +85,20 @@ name = "fsds-rs"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "fsds-rs-derive",
  "msgpack-rpc",
  "rmp",
  "struct_iterable",
  "tokio",
  "tokio-util",
+]
+
+[[package]]
+name = "fsds-rs-derive"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]
