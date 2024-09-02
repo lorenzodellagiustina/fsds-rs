@@ -46,7 +46,7 @@ impl From<ImageType> for Value {
 /// --------- ///
 /// VECTOR 3R ///
 /// --------- ///
-#[derive(Clone, Default, Iterable, IntoValue)]
+#[derive(Copy, Clone, Default, Iterable, IntoValue)]
 struct Vector3r {
     x_val: f32,
     y_val: f32,
@@ -54,12 +54,32 @@ struct Vector3r {
 }
 
 impl Vector3r {
-    fn nan_vector3r() -> Self {
+    pub fn nan_vector3r() -> Self {
         Self {
             x_val: f32::NAN,
             y_val: f32::NAN,
             z_val: f32::NAN,
         }
+    }
+
+    pub fn dot(&self, other: &Self) -> f32 {
+        self.x_val * other.x_val + self.y_val * other.y_val + self.z_val * other.z_val
+    }
+
+    pub fn cross(&self, other: &Self) -> Self {
+        Self {
+            x_val: self.y_val * other.z_val - self.z_val * other.y_val,
+            y_val: self.z_val * other.x_val - self.x_val * other.z_val,
+            z_val: self.x_val * other.y_val - self.y_val * other.x_val,
+        }
+    }
+
+    pub fn get_length(&self) -> f32 {
+        (self.x_val.powi(2) + self.y_val.powi(2) + self.z_val.powi(2)).sqrt()
+    }
+
+    pub fn distance_to(&self, other: &Self) -> f32 {
+        (*self - *other).get_length()
     }
 }
 
@@ -100,6 +120,72 @@ impl MulAssign<f32> for Vector3r {
         self.x_val *= other;
         self.y_val *= other;
         self.z_val *= other;
+    }
+}
+
+/// ----------- ///
+/// QUATERNIONR ///
+/// ----------- ///
+
+#[derive(Copy, Clone, Default, Iterable, IntoValue)]
+struct Quaternionr {
+    w_val: f32,
+    x_val: f32,
+    y_val: f32,
+    z_val: f32,
+}
+
+impl Quaternionr {
+    pub fn new(w_val: f32, x_val: f32, y_val: f32, z_val: f32) -> Self {
+        Self {
+            w_val,
+            x_val,
+            y_val,
+            z_val,
+        }
+    }
+
+    pub fn nan_quaternionr() -> Self {
+        Self {
+            w_val: f32::NAN,
+            x_val: f32::NAN,
+            y_val: f32::NAN,
+            z_val: f32::NAN,
+        }
+    }
+}
+
+impl Add for Quaternionr {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self {
+            w_val: self.w_val + other.w_val,
+            x_val: self.x_val + other.x_val,
+            y_val: self.y_val + other.y_val,
+            z_val: self.z_val + other.z_val,
+        }
+    }
+}
+
+impl Mul for Quaternionr {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        todo!()
+    }
+}
+
+
+
+impl From<Vector3r> for Quaternionr {
+    fn from(value: Vector3r) -> Self {
+        Self {
+            w_val: 0.0,
+            x_val: value.x_val,
+            y_val: value.y_val,
+            z_val: value.z_val,
+        }
     }
 }
 
