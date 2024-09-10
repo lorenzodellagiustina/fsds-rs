@@ -15,6 +15,7 @@ tokio-util = "0.7.11"
 # Utils
 anyhow = "=1.0.86"
 struct_iterable = "0.1.1"
+csv = "1.3.0"
 
 # Derive
 fsds-rs-derive = { path = "./fsds-rs-derive" }

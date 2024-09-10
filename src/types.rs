@@ -4,7 +4,7 @@
 //! Struct are serialized to `msgpack_rpc::Value::Map` and vice versa in order
 //! to be sent and received from the simulator.
 
-use fsds_rs_derive::IntoValue;
+use fsds_rs_derive::FromIntoValue;
 use msgpack_rpc::Value;
 use std::{
     any::Any,
@@ -20,6 +20,21 @@ fn any_to_value(value: &dyn Any) -> Value {
         Value::from(*value)
     } else if let Some(value) = value.downcast_ref::<bool>() {
         Value::from(*value)
+    } else if let Some(value) = value.downcast_ref::<String>() {
+        Value::String(value.clone().into())
+    } else if let Some(value) = value.downcast_ref::<Vec<u64>>() {
+        Value::Array(value.iter().map(|v| Value::from(*v)).collect())
+    } else if let Some(value) = value.downcast_ref::<Vec<f64>>() {
+        Value::Array(value.iter().map(|v| Value::from(*v)).collect())
+    } else if let Some(value) = value.downcast_ref::<Vec<bool>>() {
+        Value::Array(value.iter().map(|v| Value::from(*v)).collect())
+    } else if let Some(value) = value.downcast_ref::<Vec<String>>() {
+        Value::Array(
+            value
+                .iter()
+                .map(|v| Value::String(v.clone().into()))
+                .collect(),
+        )
     } else {
         Value::Nil
     }
@@ -46,14 +61,36 @@ impl From<ImageType> for Value {
     }
 }
 
+impl TryFrom<Value> for ImageType {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        match value {
+            // TODO: removeunwrap below
+            Value::Integer(value) => Ok(match value.as_u64().unwrap() {
+                0 => ImageType::Scene,
+                1 => ImageType::DepthPlanner,
+                2 => ImageType::DepthPerspective,
+                3 => ImageType::DepthVis,
+                4 => ImageType::DisparityNormalized,
+                5 => ImageType::Segmentation,
+                6 => ImageType::SurfaceNormals,
+                7 => ImageType::Infrared,
+                _ => return Err(anyhow::anyhow!("Invalid ImageType")),
+            }),
+            _ => Err(anyhow::anyhow!("Invalid ImageType")),
+        }
+    }
+}
+
 /// --------- ///
 /// VECTOR 3R ///
 /// --------- ///
-#[derive(Copy, Clone, Default, Iterable, IntoValue)]
+#[derive(Copy, Clone, Default, Iterable, FromIntoValue, Debug)]
 pub struct Vector3r {
-    x_val: f64,
-    y_val: f64,
-    z_val: f64,
+    pub x_val: f64,
+    pub y_val: f64,
+    pub z_val: f64,
 }
 
 impl Vector3r {
@@ -130,7 +167,7 @@ impl MulAssign<f64> for Vector3r {
 /// QUATERNIONR ///
 /// ----------- ///
 
-#[derive(Copy, Clone, Default, Iterable, IntoValue)]
+#[derive(Copy, Clone, Default, Iterable, FromIntoValue, Debug)]
 pub struct Quaternionr {
     w_val: f64,
     x_val: f64,
@@ -261,6 +298,7 @@ impl Mul for Quaternionr {
 impl Div for Quaternionr {
     type Output = Self;
 
+    #[allow(clippy::suspicious_arithmetic_impl)]
     fn div(self, other: Self) -> Self {
         self * other.inverse()
     }
@@ -289,7 +327,7 @@ impl From<Vector3r> for Quaternionr {
 /// ---- ///
 /// POSE ///
 /// ---- ///
-#[derive(Copy, Clone, Default, Iterable, IntoValue)]
+#[derive(Copy, Clone, Default, Iterable, FromIntoValue)]
 pub struct Pose {
     position: Vector3r,
     orientation: Quaternionr,
@@ -314,7 +352,7 @@ impl Pose {
 /// --------- ///
 /// GEO POINT ///
 /// --------- ///
-#[derive(Copy, Clone, Default, Iterable, IntoValue)]
+#[derive(Copy, Clone, Default, Iterable, FromIntoValue)]
 pub struct GeoPoint {
     latitude: f64,
     longitude: f64,
@@ -324,7 +362,7 @@ pub struct GeoPoint {
 /// ------------- ///
 /// IMAGE REQUEST ///
 /// ------------- ///
-#[derive(Iterable, Clone, IntoValue)]
+#[derive(Iterable, Clone, FromIntoValue)]
 pub struct ImageRequest {
     camera_name: String,
     image_type: ImageType,
@@ -332,7 +370,7 @@ pub struct ImageRequest {
     compress: bool,
 }
 
-impl<'a> Default for ImageRequest {
+impl Default for ImageRequest {
     fn default() -> Self {
         Self {
             camera_name: "0".to_string(),
@@ -346,9 +384,10 @@ impl<'a> Default for ImageRequest {
 /// -------------- ///
 /// IMAGE RESPONSE ///
 /// -------------- ///
-#[derive(Iterable, IntoValue)]
+#[derive(Iterable, FromIntoValue)]
 pub struct ImageResponse {
-    image_data: (u8, f64),
+    image_data_uint8: u64,
+    image_data_float: f64,
     camera_position: Vector3r,
     camera_orientation: Quaternionr,
     timestamp: u64, // TODO: SystemTime?
@@ -363,7 +402,8 @@ pub struct ImageResponse {
 impl Default for ImageResponse {
     fn default() -> Self {
         Self {
-            image_data: (0, 0.0),
+            image_data_uint8: 0,
+            image_data_float: 0.0,
             camera_position: Default::default(),
             camera_orientation: Default::default(),
             timestamp: 0,
@@ -380,7 +420,7 @@ impl Default for ImageResponse {
 /// ------------ ///
 /// CAR CONTROLS ///
 /// ------------ ///
-#[derive(Iterable, IntoValue)]
+#[derive(Iterable, FromIntoValue)]
 pub struct CarControls {
     pub throttle: f64,
     pub steering: f64,
@@ -408,20 +448,20 @@ impl Default for CarControls {
 /// ---------------- ///
 /// KINEMATICS STATE ///
 /// ---------------- ///
-#[derive(Iterable, IntoValue, Default)]
+#[derive(Iterable, FromIntoValue, Default, Debug)]
 pub struct KinematicsState {
-    position: Vector3r,
-    orientation: Quaternionr,
-    linear_velocity: Vector3r,
-    angular_velocity: Vector3r,
-    linear_acceleration: Vector3r,
-    angular_acceleration: Vector3r,
+    pub position: Vector3r,
+    pub orientation: Quaternionr,
+    pub linear_velocity: Vector3r,
+    pub angular_velocity: Vector3r,
+    pub linear_acceleration: Vector3r,
+    pub angular_acceleration: Vector3r,
 }
 
 /// ----------------- ///
 /// ENVIRONMENT STATE ///
 /// ----------------- ///
-#[derive(Iterable, IntoValue, Default)]
+#[derive(Iterable, FromIntoValue, Default)]
 pub struct EnvironmentState {
     pub position: Vector3r,
     pub geo_point: GeoPoint,
@@ -434,7 +474,7 @@ pub struct EnvironmentState {
 /// -------------- ///
 /// COLLISION INFO ///
 /// -------------- ///
-#[derive(Iterable, IntoValue)]
+#[derive(Iterable, FromIntoValue)]
 pub struct CollisionInfo {
     pub has_collided: bool,
     pub normal: Vector3r,
@@ -449,7 +489,7 @@ pub struct CollisionInfo {
 /// --------- ///
 /// CAR STATE ///
 /// --------- ///
-#[derive(Iterable, IntoValue)]
+#[derive(Iterable, FromIntoValue)]
 pub struct CarState {
     pub speed: f64,
     pub kinematics_estimated: KinematicsState,
@@ -459,7 +499,7 @@ pub struct CarState {
 /// ----------- ///
 /// POSITION 2D ///
 /// ----------- ///
-#[derive(Iterable, IntoValue, Default)]
+#[derive(Iterable, FromIntoValue, Default)]
 pub struct Position2D {
     pub x_val: f64,
     pub y_val: f64,
@@ -468,19 +508,19 @@ pub struct Position2D {
 /// ------------- ///
 /// REFEREE STATE ///
 /// ------------- ///
-#[derive(Iterable, IntoValue, Default)]
+#[derive(Iterable, Default)]
 pub struct RefereeState {
     pub doo_counter: u64,
     pub laps: f64,
     pub initial_position: Position2D,
-    pub cones: Vec<Position2D>,
+    pub cones: Vec<Position2D>, // TODO: Vec<Position2D> does not implement Into<Value>
 }
 
 // TODO:
 // ----------------- ///
 // PROJECTION MATRIX ///
 // ----------------- ///
-// #[derive(Iterable, IntoValue, Default)]
+// #[derive(Iterable, FromIntoValue, Default)]
 // pub struct ProjectionMatrix {
 //     pub matrix: Vec<_>,
 // }

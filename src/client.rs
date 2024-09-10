@@ -30,28 +30,39 @@ impl FSDSClient {
     ///
     /// Note that you must call `enable_api_control` again after the call to
     /// reset.
-    pub async fn reset(&mut self) -> Result<Value, Value> {
-        self.client.request("reset", &[]).await
+    pub async fn reset(&mut self) -> Result<Value, anyhow::Error> {
+        self.client
+            .request("reset", &[])
+            .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 
     /// If connection is established then this call will return Ok(_) otherwise
     /// it will be blocked until timeout.
-    pub async fn ping(&mut self) -> Result<Value, Value> {
-        self.client.request("ping", &[]).await
+    pub async fn ping(&mut self) -> Result<Value, anyhow::Error> {
+        self.client
+            .request("ping", &[])
+            .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 
     /// Enables API control for vehicle corresponding to vehicle_name.
-    pub async fn enable_api_control(&mut self, vehicle_name: &str) -> Result<Value, Value> {
+    pub async fn enable_api_control(&mut self, vehicle_name: &str) -> Result<Value, anyhow::Error> {
         self.client
             .request("enableApiControl", &[true.into(), vehicle_name.into()])
             .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 
     /// Disable API control for vehicle corresponding to vehicle_name.
-    pub async fn disable_api_control(&mut self, vehicle_name: &str) -> Result<Value, Value> {
+    pub async fn disable_api_control(
+        &mut self,
+        vehicle_name: &str,
+    ) -> Result<Value, anyhow::Error> {
         self.client
             .request("enableApiControl", &[false.into(), vehicle_name.into()])
             .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 
     /// Returns true if API control is established.
@@ -59,10 +70,14 @@ impl FSDSClient {
     /// If false (which is default) then API calls would be ignored. After a
     /// successful call to `enableApiControl`, `isApiControlEnabled` should
     /// return true.
-    pub async fn is_api_control_enabled(&mut self, vehicle_name: &str) -> Result<Value, Value> {
+    pub async fn is_api_control_enabled(
+        &mut self,
+        vehicle_name: &str,
+    ) -> Result<Value, anyhow::Error> {
         self.client
             .request("isApiControlEnabled", &[vehicle_name.into()])
             .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 
     /// Get a single image.
@@ -76,13 +91,14 @@ impl FSDSClient {
         camera_name: &str,
         image_type: ImageType,
         vehicle_name: &str,
-    ) -> Result<Value, Value> {
+    ) -> Result<Value, anyhow::Error> {
         self.client
             .request(
                 "simGetImage",
                 &[camera_name.into(), image_type.into(), vehicle_name.into()],
             )
             .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 
     /// Get multiple images.
@@ -93,27 +109,28 @@ impl FSDSClient {
         &mut self,
         requests: &[ImageRequest],
         vehicle_name: &str,
-    ) -> Result<Value, Value> {
+    ) -> Result<Value, anyhow::Error> {
         self.client
             .request(
                 "simGetImages",
                 &[
-                    Value::Array(requests.into_iter().map(|r| r.clone().into()).collect()),
+                    Value::Array(requests.iter().map(|r| r.clone().into()).collect()),
                     vehicle_name.into(),
                 ],
             )
             .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 
     /// Get Ground truth kinematics of the vehicle.
     pub async fn sim_get_ground_truth_kinematics(
         &mut self,
         vehicle_name: &str,
-    ) -> Result<Value, Value> {
+    ) -> Result<Value, anyhow::Error> {
         self.client
             .request("simGetGroundTruthKinematics", &[vehicle_name.into()])
             .await
-            .map(|v| v.into())
+            .map_err(|e| anyhow::anyhow!(e))
     }
 
     pub async fn set_car_controls(&mut self, controls: CarControls, vehicle_name: &str) {
@@ -121,9 +138,10 @@ impl FSDSClient {
             .request("setCarControls", &[controls.into(), vehicle_name.into()]);
     }
 
-    pub async fn get_car_state(&mut self, vehicle_name: &str) -> Result<Value, Value> {
+    pub async fn get_car_state(&mut self, vehicle_name: &str) -> Result<Value, anyhow::Error> {
         self.client
             .request("getCarState", &[vehicle_name.into()])
             .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 }
