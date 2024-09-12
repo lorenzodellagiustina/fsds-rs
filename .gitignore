@@ -1,2 +1,4 @@
 /target
 /fsds-rs-derive/target
+/examples/gather_data.rs
+/examples/data
