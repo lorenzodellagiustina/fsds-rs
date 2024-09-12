@@ -1,11 +1,10 @@
 [package]
 license = "GPL-3.0"
-license-file = "../LICENSE"
 name = "fsds-rs-derive"
 description = "Derive macro for fsds-rs."
 keywords = ["simulator", "api", "api-client", "driverless-car", "formula student driverless simulator"]
 repository = "https://github.com/lorenzodellagiustina/fsds-rs"
-readme = "README.md"
+readme = "../README.md"
 version = "0.1.0"
 edition = "2021"
 

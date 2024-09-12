@@ -1,6 +1,5 @@
 [package]
 license = "GPL-3.0"
-license-file = "LICENSE"
 name = "fsds-rs"
 description = "Formula Student Driverless Simulator Rust API."
 keywords = ["simulator", "api", "api-client", "driverless-car", "formula student driverless simulator"]
