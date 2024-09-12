@@ -2,7 +2,7 @@
 license = "GPL-3.0"
 name = "fsds-rs"
 description = "Formula Student Driverless Simulator Rust API."
-keywords = ["simulator", "api", "api-client", "driverless", "formula student"]
+keywords = ["simulator", "api", "api-client", "driverless", "formula-student"]
 repository = "https://github.com/lorenzodellagiustina/fsds-rs"
 readme = "README.md"
 version = "0.1.0"
