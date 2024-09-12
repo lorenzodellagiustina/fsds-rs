@@ -22,7 +22,7 @@ anyhow = "1.0.87"
 struct_iterable = "0.1.1"
 
 # Derive
-fsds-rs-derive = { path = "./fsds-rs-derive" }
+fsds-rs-derive = "0.1.0"
 
 [dev-dependencies]
 # ONNX runtime

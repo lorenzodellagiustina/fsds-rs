@@ -589,6 +589,8 @@ dependencies = [
 [[package]]
 name = "fsds-rs-derive"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5a6a6024f752224edfc89e668378e6828bde2fc5930a0a0172a1a97d94f6909"
 dependencies = [
  "quote",
  "syn",
