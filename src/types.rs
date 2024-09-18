@@ -3,47 +3,28 @@
 //!
 //! Struct are serialized to `msgpack_rpc::Value::Map` and vice versa in order
 //! to be sent and received from the simulator.
+//!
+//! Enums are serialized to `msgpack_rpc::Value::Integer` and vice versa.
 
 use fsds_rs_derive::FromIntoValue;
 use msgpack_rpc::Value;
-use std::{
-    any::Any,
-    ops::{Add, Div, DivAssign, Mul, MulAssign, Sub},
-};
-use struct_iterable::Iterable;
+use std::ops::{Add, Div, DivAssign, Mul, MulAssign, Sub};
 
-/// Utility to convert any type to a `msgpack_rpc::Value`.
-fn any_to_value(value: &dyn Any) -> Value {
-    if let Some(value) = value.downcast_ref::<u64>() {
-        Value::from(*value)
-    } else if let Some(value) = value.downcast_ref::<f64>() {
-        Value::from(*value)
-    } else if let Some(value) = value.downcast_ref::<bool>() {
-        Value::from(*value)
-    } else if let Some(value) = value.downcast_ref::<String>() {
-        Value::String(value.clone().into())
-    } else if let Some(value) = value.downcast_ref::<Vec<u64>>() {
-        Value::Array(value.iter().map(|v| Value::from(*v)).collect())
-    } else if let Some(value) = value.downcast_ref::<Vec<f64>>() {
-        Value::Array(value.iter().map(|v| Value::from(*v)).collect())
-    } else if let Some(value) = value.downcast_ref::<Vec<bool>>() {
-        Value::Array(value.iter().map(|v| Value::from(*v)).collect())
-    } else if let Some(value) = value.downcast_ref::<Vec<String>>() {
-        Value::Array(
-            value
-                .iter()
-                .map(|v| Value::String(v.clone().into()))
-                .collect(),
-        )
-    } else {
-        Value::Nil
-    }
-}
+// ---------- //
+// IMAGE TYPE //
+// ---------- //
 
-/// ---------- ///
-/// IMAGE TYPE ///
-/// ---------- ///
-#[derive(Clone, Copy)]
+/// `ImageType` is the enum that determines the type of images / cameras.
+///
+/// The enum contains all the AirSim image types, but only the following are
+/// currently supported:
+///
+/// 0) Scene: an RGB image.
+/// 2) DepthVis: a depth image.
+///
+/// Refer to the [FSDS API](https://fs-driverless.github.io/Formula-Student-Driverless-Simulator/v2.2.0/camera/#add-a-camera-to-the-car)
+/// and the [AirSim API](https://microsoft.github.io/AirSim/image_apis/#available-imagetype) for more information.
+#[derive(Clone, Copy, Debug)]
 pub enum ImageType {
     Scene = 0,
     DepthPlanner = 1,
@@ -83,17 +64,22 @@ impl TryFrom<Value> for ImageType {
     }
 }
 
-/// --------- ///
-/// VECTOR 3R ///
-/// --------- ///
-#[derive(Copy, Clone, Default, Iterable, FromIntoValue, Debug)]
+// --------- //
+// VECTOR 3R //
+// --------- //
+#[derive(Copy, Clone, Default, FromIntoValue, Debug)]
+/// A 3D vector with `f64` values.
 pub struct Vector3r {
+    /// The x value of the vector.
     pub x_val: f64,
+    /// The y value of the vector.
     pub y_val: f64,
+    /// The z value of the vector.
     pub z_val: f64,
 }
 
 impl Vector3r {
+    /// Creates a new `Vector3r` with NaN values.
     pub fn nan_vector3r() -> Self {
         Self {
             x_val: f64::NAN,
@@ -102,10 +88,19 @@ impl Vector3r {
         }
     }
 
+    /// The dot product of two vectors.
+    ///
+    /// The dot product of two vectors is a scalar value that is the sum of the
+    /// products of the corresponding components of the two vectors.
     pub fn dot(&self, other: &Self) -> f64 {
         self.x_val * other.x_val + self.y_val * other.y_val + self.z_val * other.z_val
     }
 
+    /// Cross product of two vectors.
+    ///
+    /// The cross product of two vectors is a vector that is perpendicular to
+    /// both of them. Refer to the [Wikipedia page](https://en.wikipedia.org/wiki/Cross_product)
+    /// for more information.
     pub fn cross(&self, other: &Self) -> Self {
         Self {
             x_val: self.y_val * other.z_val - self.z_val * other.y_val,
@@ -114,10 +109,12 @@ impl Vector3r {
         }
     }
 
+    /// Calculate the length of the vector.
     pub fn get_length(&self) -> f64 {
         (self.x_val.powi(2) + self.y_val.powi(2) + self.z_val.powi(2)).sqrt()
     }
 
+    /// Calculate the distance between two vectors.
     pub fn distance_to(&self, other: &Self) -> f64 {
         (*self - *other).get_length()
     }
@@ -163,28 +160,29 @@ impl MulAssign<f64> for Vector3r {
     }
 }
 
-/// ----------- ///
-/// QUATERNIONR ///
-/// ----------- ///
+// ----------- //
+// QUATERNIONR //
+// ----------- //
 
-#[derive(Copy, Clone, Default, Iterable, FromIntoValue, Debug)]
+/// A quaternion with `f64` values.
+///
+/// A quaternion is a four-dimensional number that can be used to represent
+/// rotations in 3D space.
+
+#[derive(Copy, Clone, Default, FromIntoValue, Debug)]
 pub struct Quaternionr {
-    w_val: f64,
-    x_val: f64,
-    y_val: f64,
-    z_val: f64,
+    /// The w value of the quaternion.
+    pub w_val: f64,
+    /// The x value of the quaternion.
+    pub x_val: f64,
+    /// The y value of the quaternion.
+    pub y_val: f64,
+    /// The z value of the quaternion.
+    pub z_val: f64,
 }
 
 impl Quaternionr {
-    pub fn new(w_val: f64, x_val: f64, y_val: f64, z_val: f64) -> Self {
-        Self {
-            w_val,
-            x_val,
-            y_val,
-            z_val,
-        }
-    }
-
+    /// Creates a new `Quaternionr` with NaN values.
     pub fn nan_quaternionr() -> Self {
         Self {
             w_val: f64::NAN,
@@ -194,6 +192,10 @@ impl Quaternionr {
         }
     }
 
+    /// The dot product of two quaternions.
+    /// 
+    /// The dot product of two quaternions is a scalar value that is the sum of
+    /// the products of the corresponding components of the two quaternions.
     pub fn dot(&self, other: &Self) -> f64 {
         self.w_val * other.w_val
             + self.x_val * other.x_val
@@ -201,18 +203,24 @@ impl Quaternionr {
             + self.z_val * other.z_val
     }
 
+    /// Cross product of two quaternions.
+    /// 
+    /// Refer to the [Wikipedia page](https://en.wikipedia.org/wiki/Cross_product#Quaternions)
+    /// for more information.
     pub fn cross(&self, other: &Self) -> Self {
         let mut diff = *self * *other - *other * *self;
         diff /= 2.0;
         diff
     }
 
+    /// Outer product of two quaternions.
     pub fn outer_product(&self, other: &Self) -> Self {
         let mut double = self.inverse() * *other - other.inverse() * *self;
         double /= 2.0;
         double
     }
 
+    /// Rotate a quaternion by another quaternion.
     pub fn rotate(&self, other: &Quaternionr) -> Result<Self, anyhow::Error> {
         if other.get_length() == 1.0 {
             return Ok(*other * *self * other.inverse());
@@ -221,6 +229,7 @@ impl Quaternionr {
         Err(anyhow::anyhow!("Quaternion is not normalized"))
     }
 
+    /// Conjugate of a quaternion.
     pub fn conjugate(&self) -> Self {
         Self {
             w_val: self.w_val,
@@ -230,6 +239,9 @@ impl Quaternionr {
         }
     }
 
+    /// Star of a quaternion.
+    /// 
+    /// Alias for the conjugate of a quaternion.
     pub fn star(&self) -> Self {
         self.conjugate()
     }
@@ -327,7 +339,7 @@ impl From<Vector3r> for Quaternionr {
 /// ---- ///
 /// POSE ///
 /// ---- ///
-#[derive(Copy, Clone, Default, Iterable, FromIntoValue)]
+#[derive(Copy, Clone, Default, FromIntoValue)]
 pub struct Pose {
     position: Vector3r,
     orientation: Quaternionr,
@@ -352,7 +364,7 @@ impl Pose {
 /// --------- ///
 /// GEO POINT ///
 /// --------- ///
-#[derive(Copy, Clone, Default, Iterable, FromIntoValue)]
+#[derive(Copy, Clone, Default, FromIntoValue)]
 pub struct GeoPoint {
     latitude: f64,
     longitude: f64,
@@ -362,12 +374,12 @@ pub struct GeoPoint {
 /// ------------- ///
 /// IMAGE REQUEST ///
 /// ------------- ///
-#[derive(Iterable, Clone, FromIntoValue)]
+#[derive(Clone, FromIntoValue, Debug)]
 pub struct ImageRequest {
-    camera_name: String,
-    image_type: ImageType,
-    pixels_as_float: bool,
-    compress: bool,
+    pub camera_name: String,
+    pub image_type: ImageType,
+    pub pixels_as_float: bool,
+    pub compress: bool,
 }
 
 impl Default for ImageRequest {
@@ -384,7 +396,7 @@ impl Default for ImageRequest {
 /// -------------- ///
 /// IMAGE RESPONSE ///
 /// -------------- ///
-#[derive(Iterable, FromIntoValue)]
+#[derive(FromIntoValue)]
 pub struct ImageResponse {
     image_data_uint8: u64,
     image_data_float: f64,
@@ -420,7 +432,7 @@ impl Default for ImageResponse {
 /// ------------ ///
 /// CAR CONTROLS ///
 /// ------------ ///
-#[derive(Iterable, FromIntoValue)]
+#[derive(FromIntoValue)]
 pub struct CarControls {
     pub throttle: f64,
     pub steering: f64,
@@ -448,7 +460,7 @@ impl Default for CarControls {
 /// ---------------- ///
 /// KINEMATICS STATE ///
 /// ---------------- ///
-#[derive(Iterable, FromIntoValue, Default, Debug)]
+#[derive(FromIntoValue, Default, Debug)]
 pub struct KinematicsState {
     pub position: Vector3r,
     pub orientation: Quaternionr,
@@ -461,7 +473,7 @@ pub struct KinematicsState {
 /// ----------------- ///
 /// ENVIRONMENT STATE ///
 /// ----------------- ///
-#[derive(Iterable, FromIntoValue, Default)]
+#[derive(FromIntoValue, Default)]
 pub struct EnvironmentState {
     pub position: Vector3r,
     pub geo_point: GeoPoint,
@@ -474,7 +486,7 @@ pub struct EnvironmentState {
 /// -------------- ///
 /// COLLISION INFO ///
 /// -------------- ///
-#[derive(Iterable, FromIntoValue)]
+#[derive(FromIntoValue)]
 pub struct CollisionInfo {
     pub has_collided: bool,
     pub normal: Vector3r,
@@ -489,7 +501,7 @@ pub struct CollisionInfo {
 /// --------- ///
 /// CAR STATE ///
 /// --------- ///
-#[derive(Iterable, FromIntoValue)]
+#[derive(FromIntoValue)]
 pub struct CarState {
     pub speed: f64,
     pub kinematics_estimated: KinematicsState,
@@ -499,7 +511,7 @@ pub struct CarState {
 /// ----------- ///
 /// POSITION 2D ///
 /// ----------- ///
-#[derive(Iterable, FromIntoValue, Default)]
+#[derive(FromIntoValue, Default)]
 pub struct Position2D {
     pub x_val: f64,
     pub y_val: f64,
@@ -508,7 +520,7 @@ pub struct Position2D {
 /// ------------- ///
 /// REFEREE STATE ///
 /// ------------- ///
-#[derive(Iterable, Default)]
+#[derive(Default)]
 pub struct RefereeState {
     pub doo_counter: u64,
     pub laps: f64,
@@ -520,7 +532,7 @@ pub struct RefereeState {
 // ----------------- ///
 // PROJECTION MATRIX ///
 // ----------------- ///
-// #[derive(Iterable, FromIntoValue, Default)]
+// #[derive(FromIntoValue, Default)]
 // pub struct ProjectionMatrix {
 //     pub matrix: Vec<_>,
 // }

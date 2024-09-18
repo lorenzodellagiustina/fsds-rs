@@ -5,7 +5,7 @@ description = "Formula Student Driverless Simulator Rust API."
 keywords = ["simulator", "api", "api-client", "driverless", "formula-student"]
 repository = "https://github.com/lorenzodellagiustina/fsds-rs"
 readme = "README.md"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
@@ -19,10 +19,9 @@ tokio-util = "0.7.12"
 
 # Utils
 anyhow = "1.0.87"
-struct_iterable = "0.1.1"
 
 # Derive
-fsds-rs-derive = "0.1.0"
+fsds-rs-derive = "0.1.1"
 
 [dev-dependencies]
 # ONNX runtime
@@ -32,6 +31,8 @@ ort = "2.0.0-rc.4"
 image = "0.25.2"
 ndarray = "0.16.1"
 raqote = "0.8.4"
+opencv = { version = "0.92.2" }
+nshare = "0.10.0"
 
 # Utils
 csv = "1.3.0"
