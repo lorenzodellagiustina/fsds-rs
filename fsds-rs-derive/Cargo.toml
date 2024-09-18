@@ -5,7 +5,7 @@ description = "Derive macro for fsds-rs."
 keywords = ["simulator", "api", "api-client", "driverless", "formula-student"]
 repository = "https://github.com/lorenzodellagiustina/fsds-rs"
 readme = "README.md"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [lib]
